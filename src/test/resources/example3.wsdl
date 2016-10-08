@@ -1,0 +1,925 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<wsdl:definitions xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+	xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/" xmlns:tns="http://ws.unification.data.test.be/"
+	xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/" xmlns:ns1="http://schemas.xmlsoap.org/soap/http"
+	name="TestDataUnificationWebServiceImplService" targetNamespace="http://ws.unification.data.test.be/">
+	<wsdl:types>
+		<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+			xmlns:tns="http://www.sub.test.be/XSD/SSDN/Person" xmlns:ns1="http://www.sub.test.be/XSD/SSDN/Common"
+			targetNamespace="http://www.sub.test.be/XSD/SSDN/Person"
+			version="1.0">
+
+			<xs:import namespace="http://www.sub.test.be/XSD/SSDN/Common" />
+
+			<xs:element name="AddressInformation">
+				<xs:complexType>
+					<xs:sequence>
+						<xs:element form="qualified" minOccurs="0"
+							name="ManagerLocation" type="tns:ManagerLocationType" />
+						<xs:element form="qualified" minOccurs="0" name="LegalAddress"
+							type="tns:LegalAddressType" />
+						<xs:element form="qualified" minOccurs="0"
+							name="TemporaryAddress" type="tns:PlainTextAddressType" />
+						<xs:element form="qualified" minOccurs="0"
+							name="PostAddressAbroad" type="tns:PlainTextAddressType" />
+					</xs:sequence>
+				</xs:complexType>
+			</xs:element>
+
+			<xs:element name="Citizen">
+				<xs:complexType>
+					<xs:sequence>
+						<xs:element form="qualified" name="SocialSecurityUser"
+							type="xs:string" />
+						<xs:element form="qualified" minOccurs="0"
+							name="InscriptionRegister" type="tns:InscriptionRegisterType" />
+						<xs:element form="qualified" name="LegalData" type="tns:LegalDataType" />
+					</xs:sequence>
+					<xs:attribute name="origin" type="tns:OriginType" />
+				</xs:complexType>
+			</xs:element>
+
+			<xs:complexType name="InscriptionRegisterType">
+				<xs:simpleContent>
+					<xs:extension base="xs:integer">
+						<xs:attribute name="modificationDate" type="xs:string" />
+					</xs:extension>
+				</xs:simpleContent>
+			</xs:complexType>
+
+			<xs:complexType name="LegalDataType">
+				<xs:sequence>
+					<xs:element form="qualified" name="Name" type="tns:NameType" />
+					<xs:element form="qualified" minOccurs="0" name="Gender"
+						type="tns:GenderType" />
+					<xs:element form="qualified" name="Birth" type="tns:BirthDeceaseType" />
+					<xs:element form="qualified" minOccurs="0" name="CivilState"
+						type="tns:CivilStateType" />
+					<xs:element form="qualified" minOccurs="0" name="Decease"
+						type="tns:BirthDeceaseType" />
+					<xs:element minOccurs="0" ref="tns:AddressInformation" />
+					<xs:element form="qualified" minOccurs="0" name="Nationality"
+						type="tns:NationalityType" />
+				</xs:sequence>
+			</xs:complexType>
+
+			<xs:complexType name="NameType">
+				<xs:sequence>
+					<xs:element form="qualified" name="LastName" type="xs:string" />
+					<xs:element form="qualified" minOccurs="0" name="MiddleName"
+						type="xs:string" />
+					<xs:element form="qualified" minOccurs="0" name="FirstName"
+						type="xs:string" />
+					<xs:element form="qualified" minOccurs="0"
+						name="CompleteFirstName" type="xs:boolean" />
+				</xs:sequence>
+				<xs:attribute name="modificationDate" type="xs:string" />
+			</xs:complexType>
+
+			<xs:complexType name="GenderType">
+				<xs:simpleContent>
+					<xs:extension base="xs:integer">
+						<xs:attribute name="modificationDate" type="xs:string" />
+					</xs:extension>
+				</xs:simpleContent>
+			</xs:complexType>
+
+			<xs:complexType name="BirthDeceaseType">
+				<xs:sequence>
+					<xs:element form="qualified" name="Date" type="xs:string" />
+					<xs:element form="qualified" minOccurs="0" name="Location"
+						type="tns:LocationType" />
+				</xs:sequence>
+				<xs:attribute name="modificationDate" type="xs:string" />
+			</xs:complexType>
+
+			<xs:complexType name="LocationType">
+				<xs:sequence>
+					<xs:element form="qualified" minOccurs="0" name="Code"
+						type="xs:int" />
+					<xs:element form="qualified" maxOccurs="unbounded"
+						minOccurs="0" name="Description" type="ns1:DescriptionType" />
+				</xs:sequence>
+			</xs:complexType>
+
+			<xs:complexType name="ManagerLocationType">
+				<xs:complexContent>
+					<xs:extension base="tns:LocationType">
+						<xs:sequence>
+							<xs:element form="qualified" minOccurs="0"
+								name="LinguisticRegime" type="xs:string" />
+						</xs:sequence>
+						<xs:attribute name="origin" type="tns:OriginType" />
+						<xs:attribute name="modificationDate" type="xs:string" />
+					</xs:extension>
+				</xs:complexContent>
+			</xs:complexType>
+
+			<xs:complexType name="NationalityType">
+				<xs:complexContent>
+					<xs:extension base="tns:LocationType">
+						<xs:sequence />
+						<xs:attribute name="modificationDate" type="xs:string" />
+					</xs:extension>
+				</xs:complexContent>
+			</xs:complexType>
+
+			<xs:complexType name="MunicipalityType">
+				<xs:complexContent>
+					<xs:extension base="tns:LocationType">
+						<xs:sequence>
+							<xs:element form="qualified" minOccurs="0" name="PostalCode"
+								type="xs:string" />
+						</xs:sequence>
+					</xs:extension>
+				</xs:complexContent>
+			</xs:complexType>
+
+			<xs:complexType name="CivilStateType">
+				<xs:sequence>
+					<xs:element form="qualified" name="Code" type="xs:integer" />
+					<xs:element form="qualified" maxOccurs="unbounded"
+						minOccurs="0" name="Description" type="ns1:DescriptionType" />
+					<xs:element form="qualified" minOccurs="0" name="Location"
+						type="tns:LocationType" />
+					<xs:element form="qualified" minOccurs="0" name="Partner"
+						type="tns:PartnerType" />
+				</xs:sequence>
+				<xs:attribute name="modificationDate" type="xs:string" />
+			</xs:complexType>
+
+			<xs:complexType name="PartnerType">
+				<xs:sequence>
+					<xs:element form="qualified" minOccurs="0"
+						name="SocialSecurityUser" type="xs:string" />
+					<xs:element form="qualified" minOccurs="0" name="Name"
+						type="tns:NameType" />
+					<xs:element form="qualified" minOccurs="0" name="BirthDate"
+						type="xs:string" />
+					<xs:element form="qualified" minOccurs="0" name="Gender"
+						type="xs:integer" />
+				</xs:sequence>
+			</xs:complexType>
+
+			<xs:complexType name="LegalAddressType">
+				<xs:sequence>
+					<xs:element form="qualified" minOccurs="0" name="StandardAddress"
+						type="tns:StandardAddressType" />
+					<xs:element form="qualified" minOccurs="0"
+						name="DiplomaticPostAddress" type="tns:PlainTextAddressType" />
+				</xs:sequence>
+			</xs:complexType>
+
+			<xs:complexType name="StandardAddressType">
+				<xs:sequence>
+					<xs:element form="qualified" name="Country" type="tns:LocationType" />
+					<xs:element form="qualified" minOccurs="0" name="Municipality"
+						type="tns:MunicipalityType" />
+					<xs:element form="qualified" minOccurs="0" name="Street"
+						type="tns:LocationType" />
+					<xs:element form="qualified" minOccurs="0" name="HouseNumber"
+						type="xs:string" />
+					<xs:element form="qualified" minOccurs="0" name="Box"
+						type="xs:string" />
+				</xs:sequence>
+				<xs:attribute name="origin" type="tns:OriginType" />
+				<xs:attribute name="modificationDate" type="xs:string" />
+			</xs:complexType>
+
+			<xs:complexType name="PlainTextAddressType">
+				<xs:sequence>
+					<xs:element form="qualified" minOccurs="0" name="Country"
+						type="tns:LocationType" />
+					<xs:element form="qualified" minOccurs="0" name="Address"
+						type="xs:string" />
+				</xs:sequence>
+				<xs:attribute name="origin" type="tns:OriginType" />
+				<xs:attribute name="modificationDate" type="xs:string" />
+			</xs:complexType>
+
+			<xs:simpleType name="OriginType">
+				<xs:restriction base="xs:string">
+					<xs:enumeration value="SOMETHING" />
+					<xs:enumeration value="SOMETHING_ELSE" />
+				</xs:restriction>
+			</xs:simpleType>
+
+		</xs:schema>
+		<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+			xmlns:tns="http://www.sub.test.be/XSD/SSDN/SomeRegister"
+			xmlns:ns2="http://www.sub.test.be/XSD/SSDN/Person" xmlns:ns1="http://www.sub.test.be/XSD/SSDN/Common"
+			targetNamespace="http://www.sub.test.be/XSD/SSDN/SomeRegister"
+			version="1.0">
+
+			<xs:import namespace="http://www.sub.test.be/XSD/SSDN/Common" />
+
+			<xs:import namespace="http://www.sub.test.be/XSD/SSDN/Person" />
+
+			<xs:element name="AdministrativeSituation" type="xs:int" />
+
+			<xs:element name="AdvantageCode" type="xs:string" />
+
+			<xs:element name="AdvantageType" type="xs:string" />
+
+			<xs:element name="AmiAmount" type="xs:decimal" />
+
+			<xs:element name="AmiTaxCode" type="xs:int" />
+
+			<xs:element name="BirthDate" type="xs:string" />
+
+			<xs:element name="BirthPlace" type="xs:int" />
+
+			<xs:element name="Box" type="xs:string" />
+
+			<xs:element name="Country" type="xs:string" />
+
+			<xs:element name="CountryCode" type="xs:int" />
+
+			<xs:element name="Currency" type="xs:string" />
+
+			<xs:element name="DebtorInstitutionCompanyId" type="xs:long" />
+
+			<xs:element name="DebtorInstitutionImmatriculation" type="xs:int" />
+
+			<xs:element name="DeclaratorCompanyId" type="xs:long" />
+
+			<xs:element name="DependentSpouseCode" type="xs:string" />
+
+			<xs:element name="DocumentCreationDate" type="xs:anySimpleType" />
+
+			<xs:element name="DocumentReference" type="xs:long" />
+
+			<xs:element name="DocumentType" type="xs:string" />
+
+			<xs:element name="ElementType" type="xs:string" />
+
+			<xs:element name="EmployerType" type="xs:int" />
+
+			<xs:element name="EndMonth" type="xs:string" />
+
+			<xs:element name="ExceptionCode" type="xs:string" />
+
+			<xs:element name="FamilyChargeType" type="xs:int" />
+
+			<xs:element name="FirstName" type="xs:string" />
+
+			<xs:element name="Gender" type="xs:long" />
+
+			<xs:element name="GrossAmount" type="xs:decimal" />
+
+			<xs:element name="HouseholdCode" type="xs:int" />
+
+			<xs:element name="Index" type="xs:decimal" />
+
+			<xs:element name="IndexType" type="xs:int" />
+
+			<xs:element name="InstitutionNameDE" type="xs:string" />
+
+			<xs:element name="InstitutionNameFR" type="xs:string" />
+
+			<xs:element name="InstitutionNameNL" type="xs:string" />
+
+			<xs:element name="LanguageCode" type="xs:long" />
+
+			<xs:element name="LayoutVersion" type="xs:long" />
+
+			<xs:element name="Locality" type="xs:string" />
+
+			<xs:element name="LocalityCode" type="xs:int" />
+
+			<xs:element name="MonthOfPayment" type="xs:string" />
+
+			<xs:element name="Name" type="xs:string" />
+
+			<xs:element name="Number" type="xs:string" />
+
+			<xs:element name="SomeDemandDate" type="xs:anySimpleType" />
+
+			<xs:element name="SomeDemandRefusalDate" type="xs:anySimpleType" />
+
+			<xs:element name="SomeFileId" type="xs:string" />
+
+			<xs:element name="SomeStartDate" type="xs:string" />
+
+			<xs:element name="SomeType" type="xs:int" />
+
+			<xs:element name="Something_ConsultReply">
+				<xs:complexType>
+					<xs:sequence>
+						<xs:element ref="ns1:ResultSummary" />
+						<xs:element form="qualified" minOccurs="0" name="Question"
+							type="tns:Some_ConsultRequestType" />
+						<xs:element form="qualified" minOccurs="0" name="CitizenPK">
+							<xs:complexType>
+								<xs:sequence>
+									<xs:element form="qualified" name="SocialSecurityUser"
+										type="xs:string" />
+									<xs:element form="qualified" minOccurs="0"
+										name="InscriptionRegister" type="ns2:InscriptionRegisterType" />
+									<xs:element form="qualified" minOccurs="0" name="LegalData"
+										type="ns2:LegalDataType" />
+								</xs:sequence>
+								<xs:attribute name="origin" type="ns2:OriginType" />
+							</xs:complexType>
+						</xs:element>
+						<xs:element form="qualified" maxOccurs="unbounded"
+							minOccurs="0" name="SomeItem">
+							<xs:complexType>
+								<xs:sequence>
+									<xs:element form="qualified" name="PayingInstitution">
+										<xs:complexType>
+											<xs:sequence>
+												<xs:element form="qualified" name="DebtorInstitutionCompanyId"
+													type="xs:long" />
+												<xs:element form="qualified"
+													name="DebtorInstitutionImmatriculation" type="xs:int" />
+												<xs:element form="qualified" name="InstitutionName"
+													type="xs:string" />
+											</xs:sequence>
+										</xs:complexType>
+									</xs:element>
+									<xs:element form="qualified" maxOccurs="unbounded"
+										name="PayingInstitutionItem">
+										<xs:complexType>
+											<xs:sequence>
+												<xs:element form="qualified" minOccurs="0"
+													name="SomeDemand">
+													<xs:complexType>
+														<xs:sequence>
+															<xs:element form="qualified" name="SomeDemandDate"
+																type="xs:date" />
+															<xs:element form="qualified" minOccurs="0"
+																name="SomeDemandRefusalDate" type="xs:date" />
+														</xs:sequence>
+													</xs:complexType>
+												</xs:element>
+												<xs:element form="qualified" minOccurs="0"
+													name="RightWithoutPayments">
+													<xs:complexType>
+														<xs:sequence>
+															<xs:element form="qualified" name="RightInformation"
+																type="tns:RightInformationType" />
+														</xs:sequence>
+													</xs:complexType>
+												</xs:element>
+												<xs:element form="qualified" minOccurs="0"
+													name="RightWithPayments">
+													<xs:complexType>
+														<xs:sequence>
+															<xs:element form="qualified" name="RightInformation"
+																type="tns:RightInformationType" />
+															<xs:element form="qualified" maxOccurs="unbounded"
+																name="PaymentsInformation" type="tns:PaymentInformationType" />
+														</xs:sequence>
+													</xs:complexType>
+												</xs:element>
+												<xs:element form="qualified" minOccurs="0"
+													name="RightOnly">
+													<xs:complexType>
+														<xs:sequence>
+															<xs:element form="qualified" name="RightInformation"
+																type="tns:RightInformationType" />
+														</xs:sequence>
+													</xs:complexType>
+												</xs:element>
+											</xs:sequence>
+										</xs:complexType>
+									</xs:element>
+								</xs:sequence>
+							</xs:complexType>
+						</xs:element>
+					</xs:sequence>
+				</xs:complexType>
+			</xs:element>
+
+			<xs:element name="Some_ConsultRequest" type="tns:Some_ConsultRequestType" />
+
+			<xs:element name="Periodicity" type="xs:string" />
+
+			<xs:element name="PostalCode" type="xs:string" />
+
+			<xs:element name="PrecomptableAmount" type="xs:decimal" />
+
+			<xs:element name="PrecomptePercentage" type="xs:decimal" />
+
+			<xs:element name="PrincipalMonthOfPayment" type="xs:string" />
+
+			<xs:element name="RightCloseDate" type="xs:anySimpleType" />
+
+			<xs:element name="RightModificationStartDate" type="xs:anySimpleType" />
+
+			<xs:element name="RightOrigin" type="xs:int" />
+
+			<xs:element name="RightStartDate" type="xs:string" />
+
+			<xs:element name="SolidarityAmount" type="xs:decimal" />
+
+			<xs:element name="SolidarityPercentage" type="xs:decimal" />
+
+			<xs:element name="StartMonth" type="xs:string" />
+
+			<xs:element name="Street" type="xs:string" />
+
+			<xs:element name="TechnicalNumber" type="xs:int" />
+
+			<xs:element name="TotalDependentChildren" type="xs:int" />
+
+			<xs:element name="TotalDependentOthers" type="xs:int" />
+
+			<xs:complexType name="Some_ConsultRequestType">
+				<xs:sequence>
+					<xs:element form="qualified" name="TargetSSIN" type="xs:string" />
+					<xs:element form="qualified" name="Period"
+						type="tns:ConsultationPeriodType" />
+					<xs:element form="qualified" name="RequestedData">
+						<xs:complexType>
+							<xs:sequence>
+								<xs:element form="qualified" name="Pillar" type="xs:string" />
+								<xs:element form="qualified" name="RequestedInformation"
+									type="xs:string" />
+								<xs:element form="qualified" minOccurs="0" name="Focus"
+									type="xs:string" />
+							</xs:sequence>
+						</xs:complexType>
+					</xs:element>
+					<xs:element form="qualified" minOccurs="0" name="TicketCNBC"
+						type="xs:string" />
+					<xs:element form="qualified" name="Language" type="xs:string" />
+				</xs:sequence>
+			</xs:complexType>
+
+			<xs:complexType name="ConsultationPeriodType">
+				<xs:sequence>
+					<xs:element form="qualified" name="StartDate" type="xs:date" />
+					<xs:element form="qualified" name="EndDate" type="xs:date" />
+				</xs:sequence>
+			</xs:complexType>
+
+			<xs:complexType name="RightInformationType">
+				<xs:sequence>
+					<xs:element form="qualified" name="AdvantageCode" type="xs:string" />
+					<xs:element form="qualified" name="Periodicity" type="xs:string" />
+					<xs:element form="qualified" name="SomeFileId" type="xs:string" />
+					<xs:element form="qualified" minOccurs="0"
+						name="SomeStartDate" type="xs:string" />
+					<xs:element form="qualified" minOccurs="0" name="RightStartDate"
+						type="xs:string" />
+					<xs:element form="qualified" minOccurs="0" name="SomeType"
+						type="xs:int" />
+					<xs:element form="qualified" minOccurs="0"
+						name="AdministrativeSituation" type="xs:int" />
+					<xs:element form="qualified" minOccurs="0" name="EmployerType"
+						type="xs:int" />
+					<xs:element form="qualified" minOccurs="0"
+						name="FamilyChargeType" type="xs:int" />
+					<xs:element form="qualified" minOccurs="0" name="AdvantageType"
+						type="xs:string" />
+					<xs:element form="qualified" minOccurs="0" name="HouseholdCode"
+						type="xs:int" />
+					<xs:element form="qualified" minOccurs="0" name="RightOrigin"
+						type="xs:int" />
+					<xs:element form="qualified" minOccurs="0" name="RightCloseDate"
+						type="xs:anySimpleType" />
+					<xs:element form="qualified" maxOccurs="unbounded"
+						minOccurs="0" name="Anomaly" type="tns:type_Anomaly" />
+				</xs:sequence>
+				<xs:attribute name="Pillar" type="xs:string" />
+				<xs:attribute name="Origin" type="xs:string" />
+			</xs:complexType>
+
+			<xs:complexType name="type_Anomaly">
+				<xs:sequence>
+					<xs:element form="qualified" name="Code" type="xs:string" />
+					<xs:element form="qualified" name="Description" type="xs:string" />
+				</xs:sequence>
+			</xs:complexType>
+
+			<xs:complexType name="PaymentInformationType">
+				<xs:sequence>
+					<xs:element form="qualified" name="ReferencePeriod"
+						type="tns:ReferencePeriodType" />
+					<xs:element form="qualified" name="TotalAmounts">
+						<xs:complexType>
+							<xs:sequence>
+								<xs:element form="qualified" name="TotalGrossAmount"
+									type="xs:decimal" />
+								<xs:element form="qualified" name="TotalPrecomptableAmount"
+									type="xs:decimal" />
+							</xs:sequence>
+						</xs:complexType>
+					</xs:element>
+					<xs:element form="qualified" name="Index" type="tns:type_Index" />
+					<xs:element form="qualified" maxOccurs="unbounded" name="PaymentHistory">
+						<xs:complexType>
+							<xs:sequence>
+								<xs:element form="qualified" name="GrossAmount" type="xs:decimal" />
+								<xs:element form="qualified" name="PrecomptableAmount"
+									type="xs:decimal" />
+								<xs:element form="qualified" name="PrecomptePercentage"
+									type="xs:decimal" />
+								<xs:element form="qualified" name="MonthOfPayment"
+									type="xs:string" />
+								<xs:element form="qualified" name="CreationDate"
+									type="xs:anySimpleType" />
+							</xs:sequence>
+						</xs:complexType>
+					</xs:element>
+					<xs:element form="qualified" name="IsHolidayAmount"
+						type="xs:boolean" />
+					<xs:element form="qualified" minOccurs="0" name="FiscalSituation">
+						<xs:complexType>
+							<xs:sequence>
+								<xs:element form="qualified" minOccurs="0"
+									name="DependentSpouseCode" type="xs:string" />
+								<xs:element form="qualified" minOccurs="0"
+									name="TotalDependentChildren" type="xs:int" />
+								<xs:element form="qualified" minOccurs="0"
+									name="TotalDependentOthers" type="xs:int" />
+							</xs:sequence>
+						</xs:complexType>
+					</xs:element>
+					<xs:element form="qualified" maxOccurs="unbounded"
+						minOccurs="0" name="SpecialRule">
+						<xs:complexType>
+							<xs:sequence>
+								<xs:element form="qualified" name="ExceptionCode"
+									type="xs:string" />
+								<xs:element form="qualified" name="Description" type="xs:string" />
+							</xs:sequence>
+						</xs:complexType>
+					</xs:element>
+					<xs:element form="qualified" minOccurs="0" name="Contributions">
+						<xs:complexType>
+							<xs:sequence>
+								<xs:element form="qualified" name="ZIV-AMI">
+									<xs:complexType>
+										<xs:sequence>
+											<xs:element form="qualified" name="TotalAmiAmount"
+												type="xs:decimal" />
+											<xs:element form="qualified" name="AmiTaxCode"
+												type="xs:int" />
+											<xs:element form="qualified" maxOccurs="unbounded"
+												name="ZIV-AmiHistory">
+												<xs:complexType>
+													<xs:sequence>
+														<xs:element form="qualified" name="AmiAmount"
+															type="xs:decimal" />
+														<xs:element form="qualified" name="MonthOfPayment"
+															type="xs:string" />
+														<xs:element form="qualified" name="CreationDate"
+															type="xs:anySimpleType" />
+													</xs:sequence>
+												</xs:complexType>
+											</xs:element>
+										</xs:sequence>
+									</xs:complexType>
+								</xs:element>
+								<xs:element form="qualified" name="ContributionSolidarity">
+									<xs:complexType>
+										<xs:sequence>
+											<xs:element form="qualified" name="TotalRsAmount"
+												type="xs:decimal" />
+											<xs:element form="qualified" name="SolidarityPercentage"
+												type="xs:decimal" />
+											<xs:element form="qualified" maxOccurs="unbounded"
+												name="SolidarityHistory">
+												<xs:complexType>
+													<xs:sequence>
+														<xs:element form="qualified" name="SolidarityAmount"
+															type="xs:decimal" />
+														<xs:element form="qualified" name="MonthOfPayment"
+															type="xs:string" />
+														<xs:element form="qualified" name="CreationDate"
+															type="xs:anySimpleType" />
+													</xs:sequence>
+												</xs:complexType>
+											</xs:element>
+										</xs:sequence>
+									</xs:complexType>
+								</xs:element>
+							</xs:sequence>
+						</xs:complexType>
+					</xs:element>
+					<xs:element form="qualified" maxOccurs="unbounded"
+						minOccurs="0" name="Anomaly" type="tns:type_Anomaly" />
+				</xs:sequence>
+			</xs:complexType>
+
+			<xs:complexType name="ReferencePeriodType">
+				<xs:sequence>
+					<xs:element form="qualified" name="StartMonth" type="xs:string" />
+					<xs:element form="qualified" name="EndMonth" type="xs:string" />
+				</xs:sequence>
+			</xs:complexType>
+
+			<xs:complexType name="type_Index">
+				<xs:sequence>
+					<xs:element form="qualified" name="Index" type="xs:decimal" />
+					<xs:element form="qualified" name="IndexType" type="xs:int" />
+				</xs:sequence>
+			</xs:complexType>
+
+			<xs:complexType name="type_Code">
+				<xs:sequence>
+					<xs:element form="qualified" name="Code" type="xs:string" />
+					<xs:element form="qualified" name="Description">
+						<xs:complexType>
+							<xs:simpleContent>
+								<xs:extension base="ns1:DescriptionType" />
+							</xs:simpleContent>
+						</xs:complexType>
+					</xs:element>
+				</xs:sequence>
+			</xs:complexType>
+
+			<xs:complexType name="RightType">
+				<xs:sequence />
+			</xs:complexType>
+
+		</xs:schema>
+		<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+			xmlns:tns="http://www.sub.test.be/XSD/SSDN/Common"
+			targetNamespace="http://www.sub.test.be/XSD/SSDN/Common"
+			version="1.0">
+
+			<xs:element name="ExtensionPlaceHolder">
+				<xs:complexType>
+					<xs:sequence>
+						<xs:any namespace="##other" processContents="lax" />
+					</xs:sequence>
+				</xs:complexType>
+			</xs:element>
+
+			<xs:element name="ResultSummary">
+				<xs:complexType>
+					<xs:sequence>
+						<xs:element form="qualified" name="ReturnCode" type="xs:integer" />
+						<xs:element form="qualified" maxOccurs="unbounded"
+							minOccurs="0" name="Detail" type="tns:DetailMessageType" />
+					</xs:sequence>
+					<xs:attribute name="ok" type="tns:ResultSummaryStatusType"
+						use="required" />
+				</xs:complexType>
+			</xs:element>
+
+			<xs:element name="SSIN" type="xs:string" />
+
+			<xs:complexType name="DetailMessageType">
+				<xs:sequence>
+					<xs:element form="qualified" name="Severity" type="tns:SeverityType" />
+					<xs:element form="qualified" minOccurs="0" name="ReasonCode"
+						type="xs:string" />
+					<xs:element form="qualified" minOccurs="0" name="Diagnostic"
+						type="xs:string" />
+					<xs:element form="qualified" minOccurs="0" name="AuthorCodeList"
+						type="xs:string" />
+					<xs:element form="qualified" maxOccurs="unbounded"
+						minOccurs="0" name="Information" type="tns:InformationType" />
+				</xs:sequence>
+			</xs:complexType>
+
+			<xs:complexType name="InformationType">
+				<xs:sequence>
+					<xs:element form="qualified" minOccurs="0" name="FieldName"
+						type="xs:string" />
+					<xs:element form="qualified" minOccurs="0" name="FieldValue"
+						type="xs:string" />
+				</xs:sequence>
+			</xs:complexType>
+
+			<xs:complexType name="DescriptionType">
+				<xs:simpleContent>
+					<xs:extension base="xs:string">
+						<xs:attribute name="lang" type="tns:t_Language" />
+					</xs:extension>
+				</xs:simpleContent>
+			</xs:complexType>
+
+			<xs:complexType name="EndingPeriodType">
+				<xs:sequence>
+					<xs:element form="qualified" minOccurs="0" name="StartDate"
+						type="xs:anySimpleType" />
+					<xs:element form="qualified" name="EndDate" type="xs:anySimpleType" />
+				</xs:sequence>
+			</xs:complexType>
+
+			<xs:complexType name="PeriodType">
+				<xs:sequence>
+					<xs:element form="qualified" minOccurs="0" name="StartDate"
+						type="xs:anySimpleType" />
+					<xs:element form="qualified" minOccurs="0" name="EndDate"
+						type="xs:anySimpleType" />
+				</xs:sequence>
+			</xs:complexType>
+
+			<xs:complexType name="StartingPeriodType">
+				<xs:sequence>
+					<xs:element form="qualified" name="StartDate" type="xs:anySimpleType" />
+					<xs:element form="qualified" minOccurs="0" name="EndDate"
+						type="xs:anySimpleType" />
+				</xs:sequence>
+			</xs:complexType>
+
+			<xs:complexType name="InscriptionType">
+				<xs:sequence>
+					<xs:element form="qualified" name="SSIN" type="xs:string" />
+					<xs:element form="qualified" name="OrgUnit" type="xs:string" />
+					<xs:element form="qualified" name="Purpose" type="xs:integer" />
+					<xs:element form="qualified" minOccurs="0" name="Period"
+						type="tns:PeriodType" />
+					<xs:element form="qualified" minOccurs="0" name="InscriptionCode"
+						type="xs:integer" />
+					<xs:element form="qualified" minOccurs="0" name="PhaseCode"
+						type="xs:integer" />
+				</xs:sequence>
+			</xs:complexType>
+
+			<xs:complexType name="ClosedPeriodType">
+				<xs:sequence>
+					<xs:element form="qualified" name="StartDate" type="xs:anySimpleType" />
+					<xs:element form="qualified" name="EndDate" type="xs:anySimpleType" />
+				</xs:sequence>
+			</xs:complexType>
+
+			<xs:simpleType name="SeverityType">
+				<xs:restriction base="xs:string">
+					<xs:enumeration value="INFORMATION" />
+					<xs:enumeration value="WARNING" />
+					<xs:enumeration value="ERROR" />
+				</xs:restriction>
+			</xs:simpleType>
+
+			<xs:simpleType name="ResultSummaryStatusType">
+				<xs:restriction base="xs:string">
+					<xs:enumeration value="YES" />
+					<xs:enumeration value="NO" />
+					<xs:enumeration value="WARNING" />
+				</xs:restriction>
+			</xs:simpleType>
+
+			<xs:simpleType name="t_Language">
+				<xs:restriction base="xs:string">
+					<xs:enumeration value="nl" />
+					<xs:enumeration value="fr" />
+					<xs:enumeration value="de" />
+					<xs:enumeration value="en" />
+				</xs:restriction>
+			</xs:simpleType>
+
+		</xs:schema>
+		<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+			xmlns:tns="http://ws.unification.data.test.be/" xmlns:ns2="http://www.sub.test.be/XSD/SSDN/Common"
+			xmlns:ns1="http://www.sub.test.be/XSD/SSDN/SomeRegister"
+			elementFormDefault="unqualified" targetNamespace="http://ws.unification.data.test.be/"
+			version="1.0">
+
+			<xs:import namespace="http://www.sub.test.be/XSD/SSDN/SomeRegister" />
+
+			<xs:import namespace="http://www.sub.test.be/XSD/SSDN/Common" />
+
+			<xs:element name="getReply" type="tns:getReply" />
+
+			<xs:element name="getReplyResponse" type="tns:getReplyResponse" />
+
+			<xs:complexType name="getReply">
+				<xs:sequence>
+					<xs:element minOccurs="0" name="arg0"
+						type="ns1:Some_ConsultRequestType" />
+				</xs:sequence>
+			</xs:complexType>
+
+			<xs:complexType name="getReplyResponse">
+				<xs:sequence>
+					<xs:element minOccurs="0" name="return">
+						<xs:complexType>
+							<xs:sequence>
+								<xs:element ref="ns2:ResultSummary" />
+								<xs:element form="qualified" minOccurs="0" name="Question"
+									type="ns1:Some_ConsultRequestType" />
+								<xs:element form="qualified" minOccurs="0" name="CitizenPK">
+									<xs:complexType>
+										<xs:sequence>
+											<xs:element form="qualified" name="SocialSecurityUser"
+												type="xs:string" />
+											<xs:element xmlns:ns3="http://www.sub.test.be/XSD/SSDN/Person"
+												form="qualified" minOccurs="0" name="InscriptionRegister"
+												type="ns3:InscriptionRegisterType" />
+											<xs:element xmlns:ns4="http://www.sub.test.be/XSD/SSDN/Person"
+												form="qualified" minOccurs="0" name="LegalData" type="ns4:LegalDataType" />
+										</xs:sequence>
+										<xs:attribute xmlns:ns5="http://www.sub.test.be/XSD/SSDN/Person"
+											name="origin" type="ns5:OriginType" />
+									</xs:complexType>
+								</xs:element>
+								<xs:element form="qualified" maxOccurs="unbounded"
+									minOccurs="0" name="SomeItem">
+									<xs:complexType>
+										<xs:sequence>
+											<xs:element form="qualified" name="PayingInstitution">
+												<xs:complexType>
+													<xs:sequence>
+														<xs:element form="qualified" name="DebtorInstitutionCompanyId"
+															type="xs:long" />
+														<xs:element form="qualified"
+															name="DebtorInstitutionImmatriculation" type="xs:int" />
+														<xs:element form="qualified" name="InstitutionName"
+															type="xs:string" />
+													</xs:sequence>
+												</xs:complexType>
+											</xs:element>
+											<xs:element form="qualified" maxOccurs="unbounded"
+												name="PayingInstitutionItem">
+												<xs:complexType>
+													<xs:sequence>
+														<xs:element form="qualified" minOccurs="0"
+															name="SomeDemand">
+															<xs:complexType>
+																<xs:sequence>
+																	<xs:element form="qualified" name="SomeDemandDate"
+																		type="xs:date" />
+																	<xs:element form="qualified" minOccurs="0"
+																		name="SomeDemandRefusalDate" type="xs:date" />
+																</xs:sequence>
+															</xs:complexType>
+														</xs:element>
+														<xs:element form="qualified" minOccurs="0"
+															name="RightWithoutPayments">
+															<xs:complexType>
+																<xs:sequence>
+																	<xs:element form="qualified" name="RightInformation"
+																		type="ns1:RightInformationType" />
+																</xs:sequence>
+															</xs:complexType>
+														</xs:element>
+														<xs:element form="qualified" minOccurs="0"
+															name="RightWithPayments">
+															<xs:complexType>
+																<xs:sequence>
+																	<xs:element form="qualified" name="RightInformation"
+																		type="ns1:RightInformationType" />
+																	<xs:element form="qualified" maxOccurs="unbounded"
+																		name="PaymentsInformation" type="ns1:PaymentInformationType" />
+																</xs:sequence>
+															</xs:complexType>
+														</xs:element>
+														<xs:element form="qualified" minOccurs="0"
+															name="RightOnly">
+															<xs:complexType>
+																<xs:sequence>
+																	<xs:element form="qualified" name="RightInformation"
+																		type="ns1:RightInformationType" />
+																</xs:sequence>
+															</xs:complexType>
+														</xs:element>
+													</xs:sequence>
+												</xs:complexType>
+											</xs:element>
+										</xs:sequence>
+									</xs:complexType>
+								</xs:element>
+							</xs:sequence>
+						</xs:complexType>
+					</xs:element>
+				</xs:sequence>
+			</xs:complexType>
+
+		</xs:schema>
+	</wsdl:types>
+	<wsdl:message name="getReply">
+		<wsdl:part element="tns:getReply" name="parameters">
+		</wsdl:part>
+	</wsdl:message>
+	<wsdl:message name="getReplyResponse">
+		<wsdl:part element="tns:getReplyResponse" name="parameters">
+		</wsdl:part>
+	</wsdl:message>
+	<wsdl:portType name="TestDataUnificationWebService">
+		<wsdl:operation name="getReply">
+			<wsdl:input message="tns:getReply" name="getReply">
+			</wsdl:input>
+			<wsdl:output message="tns:getReplyResponse" name="getReplyResponse">
+			</wsdl:output>
+		</wsdl:operation>
+	</wsdl:portType>
+	<wsdl:binding name="TestDataUnificationWebServiceImplServiceSoapBinding"
+		type="tns:TestDataUnificationWebService">
+		<soap:binding style="document"
+			transport="http://schemas.xmlsoap.org/soap/http" />
+		<wsdl:operation name="getReply">
+			<soap:operation soapAction="" style="document" />
+			<wsdl:input name="getReply">
+				<soap:body use="literal" />
+			</wsdl:input>
+			<wsdl:output name="getReplyResponse">
+				<soap:body use="literal" />
+			</wsdl:output>
+		</wsdl:operation>
+	</wsdl:binding>
+	<wsdl:service name="TestDataUnificationWebServiceImplService">
+		<wsdl:port binding="tns:TestDataUnificationWebServiceImplServiceSoapBinding"
+			name="TestDataUnificationWebServiceImplPort">
+			<soap:address
+				location="http://agamemnon:8080/Test/services/TestDataUnification" />
+		</wsdl:port>
+	</wsdl:service>
+</wsdl:definitions>
