@@ -31,7 +31,8 @@ public class WSDLService implements DefinedService {
 	private List<Integer> allowedHttpCodes;
 	private boolean allowXsi = true, allowDefaultNamespace = true;
 	private boolean useFullPathTarget;
-
+	private String endpoint;
+	
 	public WSDLService(String id, BindingOperation operation, HTTPClientProvider httpClientProvider, Charset charset) {
 		this.id = id;
 		this.operation = operation;
@@ -177,5 +178,11 @@ public class WSDLService implements DefinedService {
 		this.useFullPathTarget = useFullPathTarget;
 	}
 
-	
+	public String getEndpoint() {
+		return endpoint;
+	}
+	public void setEndpoint(String endpoint) {
+		this.endpoint = endpoint;
+	}
+
 }

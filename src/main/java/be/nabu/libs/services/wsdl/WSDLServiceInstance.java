@@ -96,6 +96,9 @@ public class WSDLServiceInstance implements ServiceInstance {
 	public ComplexContent execute(ExecutionContext executionContext, ComplexContent input) throws ServiceException {
 		String endpoint = (String) input.get("endpoint");
 		String transactionId = (String) input.get("transactionId");
+		if (endpoint == null) {
+			endpoint = getDefinition().getEndpoint();
+		}
 		// if no endpoint is given, use the one from the wsdl
 		if (endpoint == null && !getDefinition().getOperation().getDefinition().getServices().isEmpty() && !getDefinition().getOperation().getDefinition().getServices().get(0).getPorts().isEmpty()) {
 			endpoint = getDefinition().getOperation().getDefinition().getServices().get(0).getPorts().get(0).getEndpoint();
