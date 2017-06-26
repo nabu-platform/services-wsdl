@@ -42,18 +42,23 @@ public class WSDLService implements DefinedService {
 	
 	Structure getInput() {
 		if (input == null) {
-			input = new Structure();
-			input.setName("input");
-			input.add(new SimpleElementImpl<String>("endpoint", wrapper.wrap(String.class), input, new ValueImpl<Integer>(MinOccursProperty.getInstance(), 0)));
-			input.add(new SimpleElementImpl<String>("transactionId", wrapper.wrap(String.class), input, new ValueImpl<Integer>(MinOccursProperty.getInstance(), 0)));
-			Structure authentication = new Structure();
-			authentication.add(new SimpleElementImpl<String>("username", SimpleTypeWrapperFactory.getInstance().getWrapper().wrap(String.class), authentication, new ValueImpl<Integer>(MinOccursProperty.getInstance(), 0)));
-			authentication.add(new SimpleElementImpl<String>("password", SimpleTypeWrapperFactory.getInstance().getWrapper().wrap(String.class), authentication, new ValueImpl<Integer>(MinOccursProperty.getInstance(), 0)));
-			input.add(new ComplexElementImpl("authentication", authentication, input, new ValueImpl<Integer>(MinOccursProperty.getInstance(), 0)));
-			Message message = operation.getOperation().getInput();
-			if (message != null && !message.getParts().isEmpty()) {
-				// don't take the actual element name, this makes it harder to do generic mapping
-				input.add(new ComplexElementImpl("request", (ComplexType) message.getParts().get(0).getElement().getType(), input));
+			synchronized(this) {
+				if (input == null) {
+					Structure input = new Structure();
+					input.setName("input");
+					input.add(new SimpleElementImpl<String>("endpoint", wrapper.wrap(String.class), input, new ValueImpl<Integer>(MinOccursProperty.getInstance(), 0)));
+					input.add(new SimpleElementImpl<String>("transactionId", wrapper.wrap(String.class), input, new ValueImpl<Integer>(MinOccursProperty.getInstance(), 0)));
+					Structure authentication = new Structure();
+					authentication.add(new SimpleElementImpl<String>("username", SimpleTypeWrapperFactory.getInstance().getWrapper().wrap(String.class), authentication, new ValueImpl<Integer>(MinOccursProperty.getInstance(), 0)));
+					authentication.add(new SimpleElementImpl<String>("password", SimpleTypeWrapperFactory.getInstance().getWrapper().wrap(String.class), authentication, new ValueImpl<Integer>(MinOccursProperty.getInstance(), 0)));
+					input.add(new ComplexElementImpl("authentication", authentication, input, new ValueImpl<Integer>(MinOccursProperty.getInstance(), 0)));
+					Message message = operation.getOperation().getInput();
+					if (message != null && !message.getParts().isEmpty()) {
+						// don't take the actual element name, this makes it harder to do generic mapping
+						input.add(new ComplexElementImpl("request", (ComplexType) message.getParts().get(0).getElement().getType(), input));
+					}
+					this.input = input;
+				}
 			}
 		}
 		return input;
@@ -61,20 +66,25 @@ public class WSDLService implements DefinedService {
 	
 	Structure getOutput() {
 		if (output == null) {
-			output = new Structure();
-			output.setName("output");
-			// add the actual response
-			Message message = operation.getOperation().getOutput();
-			if (message != null && !message.getParts().isEmpty()) {
-				output.add(new ComplexElementImpl("response", (ComplexType) message.getParts().get(0).getElement().getType(), output));
-			}
-			// add any faults
-			List<Message> faults = operation.getOperation().getFaults();
-			if (faults != null && !faults.isEmpty()) {
-				if (faults.size() > 1) {
-					throw new RuntimeException("No support yet for multiple faults");
+			synchronized(this) {
+				if (output == null) {
+					Structure output = new Structure();
+					output.setName("output");
+					// add the actual response
+					Message message = operation.getOperation().getOutput();
+					if (message != null && !message.getParts().isEmpty()) {
+						output.add(new ComplexElementImpl("response", (ComplexType) message.getParts().get(0).getElement().getType(), output));
+					}
+					// add any faults
+					List<Message> faults = operation.getOperation().getFaults();
+					if (faults != null && !faults.isEmpty()) {
+						if (faults.size() > 1) {
+							throw new RuntimeException("No support yet for multiple faults");
+						}
+						output.add(new ComplexElementImpl("fault", (ComplexType) faults.get(0).getParts().get(0).getElement().getType(), output));
+					}
+					this.output = output;
 				}
-				output.add(new ComplexElementImpl("fault", (ComplexType) faults.get(0).getParts().get(0).getElement().getType(), output));
 			}
 		}
 		return output;
