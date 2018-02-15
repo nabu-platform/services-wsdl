@@ -89,6 +89,7 @@ public class WSDLServiceInstance implements ServiceInstance {
 	
 	ComplexContent parseOutput(ReadableContainer<ByteBuffer> input, Charset charset) throws IOException, ParseException {
 		XMLBinding responseBinding = new XMLBinding(buildRequestEnvelope(false), charset);
+		responseBinding.setIgnoreUndefined(true);
 		return responseBinding.unmarshal(IOUtils.toInputStream(input), new Window[0]);
 	}
 
