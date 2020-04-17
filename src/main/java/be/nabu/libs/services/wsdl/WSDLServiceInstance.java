@@ -5,6 +5,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.charset.Charset;
 import java.text.ParseException;
+import java.util.List;
 
 import be.nabu.libs.authentication.api.principals.BasicPrincipal;
 import be.nabu.libs.http.api.HTTPResponse;
@@ -19,6 +20,7 @@ import be.nabu.libs.types.BaseTypeInstance;
 import be.nabu.libs.types.api.ComplexContent;
 import be.nabu.libs.types.api.ComplexType;
 import be.nabu.libs.types.base.ComplexElementImpl;
+import be.nabu.libs.types.base.TypeBaseUtils;
 import be.nabu.libs.types.base.ValueImpl;
 import be.nabu.libs.types.binding.api.Window;
 import be.nabu.libs.types.binding.xml.XMLBinding;
@@ -27,6 +29,9 @@ import be.nabu.libs.types.properties.AttributeQualifiedDefaultProperty;
 import be.nabu.libs.types.properties.ElementQualifiedDefaultProperty;
 import be.nabu.libs.types.properties.MinOccursProperty;
 import be.nabu.libs.types.structure.Structure;
+import be.nabu.libs.wsdl.api.BindingOperationMessage;
+import be.nabu.libs.wsdl.api.BindingOperationMessageLayout;
+import be.nabu.libs.wsdl.api.MessagePart;
 import be.nabu.utils.io.IOUtils;
 import be.nabu.utils.io.api.ByteBuffer;
 import be.nabu.utils.io.api.LimitedReadableContainer;
@@ -54,13 +59,29 @@ public class WSDLServiceInstance implements ServiceInstance {
 		ComplexContent envelope = buildRequestEnvelope.newInstance();
 		envelope.set("Body", ((ComplexType) buildRequestEnvelope.get("Body").getType()).newInstance());
 		if (input != null) {
-			((ComplexContent) envelope.get("Body")).set(getDefinition().getOperation().getOperation().getInput().getParts().get(0).getElement().getName(), input);
+			if (definition.isBackwardsCompatible()) {
+				((ComplexContent) envelope.get("Body")).set(getDefinition().getOperation().getOperation().getInput().getParts().get(0).getElement().getName(), input);
+			}
+			else {
+				BindingOperationMessageLayout inputPartLayout = getDefinition().getOperation().getInputPartLayout();
+				if (inputPartLayout != null && inputPartLayout.getBody() != null && inputPartLayout.getBody().getParts() != null) {
+					for (MessagePart part : inputPartLayout.getBody().getParts()) {
+						envelope.set("Body/" + part.getElement().getName(), input.get("body/" + part.getElement().getName()));
+					}
+				}
+				if (inputPartLayout != null && inputPartLayout.getHeader() != null && inputPartLayout.getHeader().getParts() != null && !inputPartLayout.getHeader().getParts().isEmpty()) {
+					for (MessagePart part : inputPartLayout.getHeader().getParts()) {
+						envelope.set("Header/" + part.getElement().getName(), input.get("header/" + part.getElement().getName()));
+					}
+				}
+			}
 		}
 		// use marshaller directly to access more features
 		XMLMarshaller marshaller = new XMLMarshaller(new BaseTypeInstance(buildRequestEnvelope));
 		ByteBuffer buffer = IOUtils.newByteBuffer();
 		marshaller.setAllowXSI(definition.isAllowXsi());
 		marshaller.setAllowDefaultNamespace(definition.isAllowDefaultNamespace());
+		marshaller.setAllowQualifiedOverride(true);
 		if (definition.isAllowDefaultNamespace()) {
 			// we set the default namespace to that of the actual input, not all parsers are too good with namespaces, having the main content
 			// with as few prefixes as possible is always a good thing
@@ -108,7 +129,7 @@ public class WSDLServiceInstance implements ServiceInstance {
 			throw new ServiceException("SOAP-1", "No endpoint passed in and none were found in the wsdl");
 		}
 		try {
-			LimitedReadableContainer<ByteBuffer> buffer = buildInput((ComplexContent) input.get("request"), getDefinition().getCharset());
+			LimitedReadableContainer<ByteBuffer> buffer = buildInput((ComplexContent) input, getDefinition().getCharset());
 			
 			final String username = input == null || input.get("authentication/username") == null ? definition.getUsername() : (String) input.get("authentication/username");
 			final String password = input == null || input.get("authentication/password") == null ? definition.getPassword() : (String) input.get("authentication/password");
@@ -156,12 +177,37 @@ public class WSDLServiceInstance implements ServiceInstance {
 			);
 			if ((httpResponse.getCode() >= 200 && httpResponse.getCode() < 300) || (getDefinition().getAllowedHttpCodes() != null && getDefinition().getAllowedHttpCodes().contains(httpResponse.getCode()))) {
 				ComplexContent response = parseOutput(((ContentPart) httpResponse.getContent()).getReadable(), getDefinition().getCharset());
-				ComplexContent output = getDefinition().getOutput().newInstance();
-				if (getDefinition().getOperation().getOperation().getOutput() != null && !getDefinition().getOperation().getOperation().getOutput().getParts().isEmpty()) {
-					output.set("response", ((ComplexContent) response.get("Body")).get(getDefinition().getOperation().getOperation().getOutput().getParts().get(0).getElement().getName()));
+				ComplexContent output = getDefinition().getServiceInterface().getOutputDefinition().newInstance();
+				if (definition.isBackwardsCompatible()) {
+					if (getDefinition().getOperation().getOperation().getOutput() != null && !getDefinition().getOperation().getOperation().getOutput().getParts().isEmpty()) {
+						output.set("response", ((ComplexContent) response.get("Body")).get(getDefinition().getOperation().getOperation().getOutput().getParts().get(0).getElement().getName()));
+					}
+					if (getDefinition().getOperation().getOperation().getFaults() != null && !getDefinition().getOperation().getOperation().getFaults().isEmpty() && !getDefinition().getOperation().getOperation().getFaults().get(0).getParts().isEmpty()) {
+						output.set("fault", ((ComplexContent) response.get("Body")).get(getDefinition().getOperation().getOperation().getFaults().get(0).getParts().get(0).getElement().getName()));
+					}
 				}
-				if (getDefinition().getOperation().getOperation().getFaults() != null && !getDefinition().getOperation().getOperation().getFaults().isEmpty() && !getDefinition().getOperation().getOperation().getFaults().get(0).getParts().isEmpty()) {
-					output.set("fault", ((ComplexContent) response.get("Body")).get(getDefinition().getOperation().getOperation().getFaults().get(0).getParts().get(0).getElement().getName()));
+				else if (getDefinition().getOperation().getOutputPartLayout() != null) {
+					BindingOperationMessage body = getDefinition().getOperation().getOutputPartLayout().getBody();
+					if (body != null && body.getParts() != null && !body.getParts().isEmpty()) {
+						for (MessagePart part : body.getParts()) {
+							output.set("body/" + part.getElement().getName(), response.get("Body/" + part.getElement().getName()));
+						}
+					}
+					BindingOperationMessage header = getDefinition().getOperation().getOutputPartLayout().getHeader();
+					if (header != null && header.getParts() != null && !header.getParts().isEmpty()) {
+						for (MessagePart part : header.getParts()) {
+							output.set("header/" + part.getElement().getName(), response.get("Header/" + part.getElement().getName()));
+						}
+					}
+					if (getDefinition().getOperation().getFaults() != null) {
+						for (BindingOperationMessage message : getDefinition().getOperation().getFaults()) {
+							if (message.getParts() != null) {
+								for (MessagePart part : message.getParts()) {
+									output.set("fault/" + part.getElement().getName(), response.get("Body/" + part.getElement().getName()));
+								}		
+							}
+						}
+					}
 				}
 				return output;
 			}
@@ -199,20 +245,57 @@ public class WSDLServiceInstance implements ServiceInstance {
 		header.setName("Header");
 		envelope.add(new ComplexElementImpl(header, envelope, new ValueImpl<Integer>(new MinOccursProperty(), 0)));
 		
+		
 		Structure body = new Structure();
 		body.setName("Body");
 		body.setNamespace(envelope.getNamespace());
 		if (isInput) {
-			if (getDefinition().getOperation().getOperation().getInput() != null && !getDefinition().getOperation().getOperation().getInput().getParts().isEmpty()) {
-				body.add(getDefinition().getOperation().getOperation().getInput().getParts().get(0).getElement());
+			// check if we have a header piece
+			if (definition.getOperation().getInputPartLayout() != null && definition.getOperation().getInputPartLayout().getHeader() != null && definition.getOperation().getInputPartLayout().getHeader().getParts() != null
+					&& !definition.getOperation().getInputPartLayout().getHeader().getParts().isEmpty()) {
+				// should only be one
+				for (MessagePart part : definition.getOperation().getInputPartLayout().getHeader().getParts()) {
+					header.add(TypeBaseUtils.clone(part.getElement(), header));
+				}
+			}
+			
+			if (getDefinition().getOperation().getInputPartLayout() != null && getDefinition().getOperation().getInputPartLayout().getBody() != null) {
+				List<MessagePart> parts = getDefinition().getOperation().getInputPartLayout().getBody().getParts();
+				if (parts != null && !parts.isEmpty()) {
+					for (MessagePart part : parts) {
+						body.add(TypeBaseUtils.clone(part.getElement(), header));
+					}
+				}
 			}
 		}
 		else {
-			if (getDefinition().getOperation().getOperation().getOutput() != null && !getDefinition().getOperation().getOperation().getOutput().getParts().isEmpty()) {
-				body.add(getDefinition().getOperation().getOperation().getOutput().getParts().get(0).getElement());
+			// check if we have a header piece
+			if (definition.getOperation().getOutputPartLayout() != null && definition.getOperation().getOutputPartLayout().getHeader() != null && definition.getOperation().getOutputPartLayout().getHeader().getParts() != null
+					&& !definition.getOperation().getOutputPartLayout().getHeader().getParts().isEmpty()) {
+				// should only be one
+				for (MessagePart part : definition.getOperation().getOutputPartLayout().getHeader().getParts()) {
+					header.add(TypeBaseUtils.clone(part.getElement(), header));
+				}
 			}
-			if (getDefinition().getOperation().getOperation().getFaults() != null && !getDefinition().getOperation().getOperation().getFaults().isEmpty() && !getDefinition().getOperation().getOperation().getFaults().get(0).getParts().isEmpty()) {
-				body.add(getDefinition().getOperation().getOperation().getFaults().get(0).getParts().get(0).getElement());
+			
+			if (getDefinition().getOperation().getOutputPartLayout() != null && getDefinition().getOperation().getOutputPartLayout().getBody() != null) {
+				List<MessagePart> parts = getDefinition().getOperation().getOutputPartLayout().getBody().getParts();
+				if (parts != null && !parts.isEmpty()) {
+					for (MessagePart part : parts) {
+						body.add(TypeBaseUtils.clone(part.getElement(), header));
+					}
+				}
+				List<BindingOperationMessage> faults = getDefinition().getOperation().getFaults();
+				if (faults != null && !faults.isEmpty()) {
+					for (BindingOperationMessage fault : faults) {
+						List<MessagePart> faultParts = fault.getParts();
+						if (faultParts != null && !faultParts.isEmpty()) {
+							for (MessagePart faultPart : faultParts) {
+								body.add(TypeBaseUtils.clone(faultPart.getElement(), header));								
+							}
+						}
+					}
+				}
 			}
 		}
 		envelope.add(new ComplexElementImpl(body, envelope));

@@ -41,7 +41,7 @@ public class TestParsing extends TestCase {
 			}
 		}, Charset.forName("UTF-8"));
 		
-		for (Element<?> child : service.getInput()) {
+		for (Element<?> child : service.getServiceInterface().getInputDefinition()) {
 			System.out.println("child: " + child.getName());
 		}
 		

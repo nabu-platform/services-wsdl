@@ -7,23 +7,12 @@ import java.util.Set;
 
 import be.nabu.libs.services.api.DefinedService;
 import be.nabu.libs.services.api.ServiceInterface;
-import be.nabu.libs.types.SimpleTypeWrapperFactory;
-import be.nabu.libs.types.api.ComplexType;
-import be.nabu.libs.types.api.SimpleTypeWrapper;
-import be.nabu.libs.types.base.ComplexElementImpl;
-import be.nabu.libs.types.base.SimpleElementImpl;
-import be.nabu.libs.types.base.ValueImpl;
-import be.nabu.libs.types.properties.MinOccursProperty;
-import be.nabu.libs.types.structure.Structure;
 import be.nabu.libs.wsdl.api.BindingOperation;
-import be.nabu.libs.wsdl.api.Message;
 
 public class WSDLService implements DefinedService {
 
 	private String id;
 	private BindingOperation operation;
-	private Structure input, output;
-	private SimpleTypeWrapper wrapper = SimpleTypeWrapperFactory.getInstance().getWrapper();
 	private HTTPClientProvider httpClientProvider;
 	private Charset charset;
 	private List<PredefinedNamespace> namespaces;
@@ -32,80 +21,20 @@ public class WSDLService implements DefinedService {
 	private boolean allowXsi = true, allowDefaultNamespace = true;
 	private boolean useFullPathTarget;
 	private String endpoint;
+	private boolean backwardsCompatible = false;
+	private WSDLInterface iface;
 	
 	public WSDLService(String id, BindingOperation operation, HTTPClientProvider httpClientProvider, Charset charset) {
 		this.id = id;
 		this.operation = operation;
 		this.httpClientProvider = httpClientProvider;
 		this.charset = charset;
-	}
-	
-	Structure getInput() {
-		if (input == null) {
-			synchronized(this) {
-				if (input == null) {
-					Structure input = new Structure();
-					input.setName("input");
-					input.add(new SimpleElementImpl<String>("endpoint", wrapper.wrap(String.class), input, new ValueImpl<Integer>(MinOccursProperty.getInstance(), 0)));
-					input.add(new SimpleElementImpl<String>("transactionId", wrapper.wrap(String.class), input, new ValueImpl<Integer>(MinOccursProperty.getInstance(), 0)));
-					Structure authentication = new Structure();
-					authentication.add(new SimpleElementImpl<String>("username", SimpleTypeWrapperFactory.getInstance().getWrapper().wrap(String.class), authentication, new ValueImpl<Integer>(MinOccursProperty.getInstance(), 0)));
-					authentication.add(new SimpleElementImpl<String>("password", SimpleTypeWrapperFactory.getInstance().getWrapper().wrap(String.class), authentication, new ValueImpl<Integer>(MinOccursProperty.getInstance(), 0)));
-					input.add(new ComplexElementImpl("authentication", authentication, input, new ValueImpl<Integer>(MinOccursProperty.getInstance(), 0)));
-					Message message = operation.getOperation().getInput();
-					if (message != null && !message.getParts().isEmpty()) {
-						// don't take the actual element name, this makes it harder to do generic mapping
-						input.add(new ComplexElementImpl("request", (ComplexType) message.getParts().get(0).getElement().getType(), input));
-					}
-					this.input = input;
-				}
-			}
-		}
-		return input;
-	}
-	
-	Structure getOutput() {
-		if (output == null) {
-			synchronized(this) {
-				if (output == null) {
-					Structure output = new Structure();
-					output.setName("output");
-					// add the actual response
-					Message message = operation.getOperation().getOutput();
-					if (message != null && !message.getParts().isEmpty()) {
-						output.add(new ComplexElementImpl("response", (ComplexType) message.getParts().get(0).getElement().getType(), output));
-					}
-					// add any faults
-					List<Message> faults = operation.getOperation().getFaults();
-					if (faults != null && !faults.isEmpty()) {
-						if (faults.size() > 1) {
-							throw new RuntimeException("No support yet for multiple faults");
-						}
-						output.add(new ComplexElementImpl("fault", (ComplexType) faults.get(0).getParts().get(0).getElement().getType(), output));
-					}
-					this.output = output;
-				}
-			}
-		}
-		return output;
+		this.iface = new WSDLInterface(id, operation);
 	}
 	
 	@Override
 	public ServiceInterface getServiceInterface() {
-		return new ServiceInterface() {
-			@Override
-			public ComplexType getInputDefinition() {
-				return getInput();
-			}
-			@Override
-			public ComplexType getOutputDefinition() {
-				return getOutput();
-			}
-			@Override
-			public ServiceInterface getParent() {
-				return null;
-			}
-		};
+		return iface;
 	}
 	
 	BindingOperation getOperation() {
@@ -195,4 +124,11 @@ public class WSDLService implements DefinedService {
 		this.endpoint = endpoint;
 	}
 
+	public boolean isBackwardsCompatible() {
+		return backwardsCompatible;
+	}
+	public void setBackwardsCompatible(boolean backwardsCompatible) {
+		this.backwardsCompatible = backwardsCompatible;
+	}
+	
 }

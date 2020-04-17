@@ -19,6 +19,7 @@ import be.nabu.libs.http.client.connections.PlainConnectionHandler;
 import be.nabu.libs.http.core.CustomCookieStore;
 import be.nabu.libs.types.api.ComplexContent;
 import be.nabu.libs.types.api.ComplexType;
+import be.nabu.libs.types.api.Element;
 import be.nabu.libs.wsdl.api.BindingOperation;
 import be.nabu.libs.wsdl.api.WSDLDefinition;
 import be.nabu.libs.wsdl.parser.WSDLParser;
@@ -30,22 +31,34 @@ public class TestOperation {
 		WSDLDefinition definition = parser.getDefinition();
 		System.out.println(definition.getBindings().get(0).getOperations());
 		for (BindingOperation operation : definition.getBindings().get(0).getOperations()) {
-			System.out.println("operation: " + operation.getName());
+			System.out.println("Operation: " + operation.getName());
 			WSDLService service = new WSDLService(operation.getName(), operation, new HTTPClientProvider() {
 				@Override
 				public HTTPClient newHTTPClient(String transactionId) {
 					return newClient();
 				}
 			}, Charset.forName("UTF-8"));
-			ComplexContent content = ((ComplexType) operation.getOperation().getInput().getParts().get(0).getElement().getType()).newInstance();
 
-			ComplexContent input = service.getInput().newInstance();
-			input.set("request", content);
-//			if (operation.getName().equals("Add")) {
-				content.set("x", 5);
-				content.set("y", "6");
-				byte [] bytes = IOUtils.toBytes(service.newInstance().buildInput(content, Charset.forName("UTF-8")));
-				System.out.println(new String(bytes, "UTF-8"));
+			ComplexContent input = service.getServiceInterface().getInputDefinition().newInstance();
+			
+			if (operation.getName().equals("Add")) {
+				input.set("body/Add/x", 5);
+				input.set("body/Add/y", 6);
+			}
+			else if (operation.getName().equals("Multiply")) {
+				input.set("body/Multiply/x", 5);
+				input.set("body/Multiply/y", 6);
+			}
+			else if (operation.getName().equals("Divide")) {
+				input.set("body/Divide/x", 5);
+				input.set("body/Divide/y", 6);
+			}
+			else if (operation.getName().equals("Subtract")) {
+				input.set("body/Subtract/x", 5);
+				input.set("body/Subtract/y", 6);
+			}
+			byte [] bytes = IOUtils.toBytes(service.newInstance().buildInput(input, Charset.forName("UTF-8")));
+			System.out.println(new String(bytes, "UTF-8"));
 //			}
 		}
 	}
