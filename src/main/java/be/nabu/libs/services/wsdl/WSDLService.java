@@ -5,8 +5,10 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import be.nabu.libs.http.api.WebAuthorizationType;
 import be.nabu.libs.services.api.DefinedService;
 import be.nabu.libs.services.api.ServiceInterface;
+import be.nabu.libs.services.wsdl.api.WSExtension;
 import be.nabu.libs.wsdl.api.BindingOperation;
 
 public class WSDLService implements DefinedService {
@@ -23,6 +25,8 @@ public class WSDLService implements DefinedService {
 	private String endpoint;
 	private boolean backwardsCompatible = false;
 	private WSDLInterface iface;
+	private WebAuthorizationType preemptiveAuthorizationType;
+	private List<WSExtension> extensions;
 	
 	public WSDLService(String id, BindingOperation operation, HTTPClientProvider httpClientProvider, Charset charset) {
 		this.id = id;
@@ -129,6 +133,32 @@ public class WSDLService implements DefinedService {
 	}
 	public void setBackwardsCompatible(boolean backwardsCompatible) {
 		this.backwardsCompatible = backwardsCompatible;
+	}
+
+	public WebAuthorizationType getPreemptiveAuthorizationType() {
+		return preemptiveAuthorizationType;
+	}
+
+	public void setPreemptiveAuthorizationType(WebAuthorizationType preemptiveAuthorizationType) {
+		this.preemptiveAuthorizationType = preemptiveAuthorizationType;
+	}
+	
+	public String getSoapNamespace() {
+		if (getOperation().getDefinition().getSoapVersion() == 1.2) {
+			return "http://www.w3.org/2003/05/soap-envelope";
+		}
+		// default is 1.1
+		else {
+			return "http://schemas.xmlsoap.org/soap/envelope/";
+		}
+	}
+
+	public List<WSExtension> getExtensions() {
+		return extensions;
+	}
+
+	public void setExtensions(List<WSExtension> extensions) {
+		this.extensions = extensions;
 	}
 	
 }
