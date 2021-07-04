@@ -188,6 +188,9 @@ public class WSDLServiceInstance implements ServiceInstance {
 				new MimeHeader("Content-Type", (getDefinition().getOperation().getDefinition().getSoapVersion() == 1.2 ? "application/soap+xml" : "text/xml") + "; charset=" + getDefinition().getCharset().displayName().toLowerCase()),
 				new MimeHeader("Host", uri.getAuthority())
 			);
+			// this should be ok because the buffer is a DynamicByteBuffer which is resettable
+			content.setReopenable(true);
+			
 			if (getDefinition().getOperation().getSoapAction() != null) {
 				content.setHeader(new MimeHeader("SOAPAction", "\"" + getDefinition().getOperation().getSoapAction() + "\""));
 			}
@@ -246,7 +249,19 @@ public class WSDLServiceInstance implements ServiceInstance {
 				return output;
 			}
 			else {
-				throw new ServiceException("SOAP-2", "HTTP Exception [" + httpResponse.getCode() + "] " + httpResponse.getMessage(), httpResponse.getCode(), httpResponse.getMessage());
+				byte[] bytes = null;
+				if (httpResponse.getContent() instanceof ContentPart) {
+					ReadableContainer<ByteBuffer> readable = ((ContentPart) httpResponse.getContent()).getReadable();
+					if (readable != null) {
+						try {
+							bytes = IOUtils.toBytes(readable);
+						}
+						finally {
+							readable.close();
+						}
+					}
+				}
+				throw new ServiceException("SOAP-2", "HTTP Exception [" + httpResponse.getCode() + "] " + httpResponse.getMessage() + (bytes == null ? "" : "\n" + new String(bytes)), httpResponse.getCode(), httpResponse.getMessage());
 			}
 		}
 		catch (IOException e) {

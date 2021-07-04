@@ -1,17 +1,23 @@
 package be.nabu.libs.services.wsdl;
 
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.nio.charset.Charset;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import be.nabu.libs.artifacts.ExternalDependencyImpl;
+import be.nabu.libs.artifacts.api.ExternalDependency;
+import be.nabu.libs.artifacts.api.ExternalDependencyArtifact;
 import be.nabu.libs.http.api.WebAuthorizationType;
 import be.nabu.libs.services.api.DefinedService;
 import be.nabu.libs.services.api.ServiceInterface;
 import be.nabu.libs.services.wsdl.api.WSExtension;
 import be.nabu.libs.wsdl.api.BindingOperation;
 
-public class WSDLService implements DefinedService {
+public class WSDLService implements DefinedService, ExternalDependencyArtifact {
 
 	private String id;
 	private BindingOperation operation;
@@ -159,6 +165,27 @@ public class WSDLService implements DefinedService {
 
 	public void setExtensions(List<WSExtension> extensions) {
 		this.extensions = extensions;
+	}
+
+	@Override
+	public List<ExternalDependency> getExternalDependencies() {
+		List<ExternalDependency> dependencies = new ArrayList<ExternalDependency>();
+		ExternalDependencyImpl dependency = new ExternalDependencyImpl();
+		try {
+			if (endpoint != null) {
+				dependency.setEndpoint(new URI(endpoint));
+			}
+		}
+		catch (URISyntaxException e) {
+			// can't help it...
+		}
+		dependency.setArtifactId(getId());
+		dependency.setMethod("POST");
+		dependency.setId(operation.getSoapAction());
+		dependency.setType("SOAP");
+		dependency.setCredentials(username);
+		dependencies.add(dependency);
+		return dependencies;
 	}
 	
 }
