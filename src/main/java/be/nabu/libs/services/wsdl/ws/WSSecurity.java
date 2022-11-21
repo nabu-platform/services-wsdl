@@ -7,6 +7,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.TimeZone;
 import java.util.UUID;
 
 import be.nabu.libs.property.ValueUtils;
@@ -27,6 +28,7 @@ import be.nabu.libs.types.base.SimpleElementImpl;
 import be.nabu.libs.types.base.ValueImpl;
 import be.nabu.libs.types.properties.AttributeQualifiedDefaultProperty;
 import be.nabu.libs.types.properties.NamespaceProperty;
+import be.nabu.libs.types.properties.TimezoneProperty;
 import be.nabu.libs.types.structure.Structure;
 import be.nabu.utils.codec.TranscoderUtils;
 import be.nabu.utils.codec.impl.Base64Encoder;
@@ -40,10 +42,14 @@ public class WSSecurity implements WSExtension {
 	public static final String WSU = "http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-utility-1.0.xsd";
 	
 	private WSSecurityType wsSecurityType;
+	// when a duration is configured, the timestamp is added
+	private Long timestampDuration;
+	
+	private TimeZone timezone;
 	
 	@Override
 	public void addDefinition(WSDLService service, ModifiableComplexType envelope, Value<?>...values) {
-		((ModifiableComplexType) envelope.get("Header").getType()).add(new ComplexElementImpl("Security", newDefinition(service.getSoapNamespace()), envelope));
+		((ModifiableComplexType) envelope.get("Header").getType()).add(new ComplexElementImpl("Security", newDefinition(service.getSoapNamespace(), timezone), envelope));
 	}
 	
 	@Override
@@ -62,10 +68,15 @@ public class WSSecurity implements WSExtension {
 			boolean useNonce = true;
 			boolean useCreated = true;
 			
-			Date created = null;
+			Date created = new Date();
 			if (useCreated) {
-				created = new Date();
 				envelope.set("Header/Security/UsernameToken/Created", created);
+			}
+			
+			if (timestampDuration != null) {
+				envelope.set("Header/Security/Timestamp/Created", created);
+				envelope.set("Header/Security/Timestamp/Expires", new Date(created.getTime() + timestampDuration));
+				envelope.set("Header/Security/Timestamp/@Id", "Timestamp-" + UUID.randomUUID().toString().replace("-", ""));
 			}
 			
 			
@@ -132,7 +143,7 @@ public class WSSecurity implements WSExtension {
 		return list;
 	}
 	
-	public static Structure newDefinition(String soapNamespace) {
+	public static Structure newDefinition(String soapNamespace, TimeZone timezone) {
 		DefinedSimpleType<String> string = SimpleTypeWrapperFactory.getInstance().getWrapper().wrap(String.class);
 		Structure security = new Structure();
 		security.setProperty(new ValueImpl<Boolean>(AttributeQualifiedDefaultProperty.getInstance(), true));
@@ -152,8 +163,8 @@ public class WSSecurity implements WSExtension {
 		token.add(new SimpleElementImpl<String>("Username", string, token,
 				new ValueImpl<String>(NamespaceProperty.getInstance(), WSSE)));
 		
-		token.add(new SimpleElementImpl<String>("Username", string, token,
-				new ValueImpl<String>(NamespaceProperty.getInstance(), WSSE)));
+//		token.add(new SimpleElementImpl<String>("Username", string, token,
+//				new ValueImpl<String>(NamespaceProperty.getInstance(), WSSE)));
 
 		Structure password = new Structure();
 		password.add(new SimpleElementImpl<String>(ComplexType.SIMPLE_TYPE_VALUE, string, password));
@@ -166,7 +177,20 @@ public class WSSecurity implements WSExtension {
 		token.add(new ComplexElementImpl("Nonce", nonce, token));
 		
 		token.add(new SimpleElementImpl<Date>("Created", SimpleTypeWrapperFactory.getInstance().getWrapper().wrap(Date.class), token,
+				new ValueImpl<String>(NamespaceProperty.getInstance(), WSU),
+				new ValueImpl<TimeZone>(TimezoneProperty.getInstance(), timezone)));
+		
+		Structure timestamp = new Structure();
+		timestamp.setNamespace(WSU);
+		timestamp.add(new SimpleElementImpl<String>("@Id", string, token,
 				new ValueImpl<String>(NamespaceProperty.getInstance(), WSU)));
+		timestamp.add(new SimpleElementImpl<Date>("Created", SimpleTypeWrapperFactory.getInstance().getWrapper().wrap(Date.class), token,
+				new ValueImpl<String>(NamespaceProperty.getInstance(), WSU),
+				new ValueImpl<TimeZone>(TimezoneProperty.getInstance(), timezone)));
+		timestamp.add(new SimpleElementImpl<Date>("Expires", SimpleTypeWrapperFactory.getInstance().getWrapper().wrap(Date.class), token,
+				new ValueImpl<String>(NamespaceProperty.getInstance(), WSU),
+				new ValueImpl<TimeZone>(TimezoneProperty.getInstance(), timezone)));
+		security.add(new ComplexElementImpl("Timestamp", timestamp, security));
 		
 		return security;
 	}
@@ -179,4 +203,19 @@ public class WSSecurity implements WSExtension {
 		this.wsSecurityType = wsSecurityType;
 	}
 
+	public Long getTimestampDuration() {
+		return timestampDuration;
+	}
+
+	public void setTimestampDuration(Long timestampDuration) {
+		this.timestampDuration = timestampDuration;
+	}
+
+	public TimeZone getTimezone() {
+		return timezone;
+	}
+
+	public void setTimezone(TimeZone timezone) {
+		this.timezone = timezone;
+	}
 }
