@@ -41,6 +41,7 @@ import be.nabu.utils.io.api.ByteBuffer;
 import be.nabu.utils.io.api.LimitedReadableContainer;
 import be.nabu.utils.io.api.ReadableContainer;
 import be.nabu.utils.mime.api.ContentPart;
+import be.nabu.utils.mime.api.MultiPart;
 import be.nabu.utils.mime.impl.FormatException;
 import be.nabu.utils.mime.impl.MimeHeader;
 import be.nabu.utils.mime.impl.PlainMimeContentPart;
@@ -213,7 +214,17 @@ public class WSDLServiceInstance implements ServiceInstance {
 				true
 			);
 			if ((httpResponse.getCode() >= 200 && httpResponse.getCode() < 300) || (getDefinition().getAllowedHttpCodes() != null && getDefinition().getAllowedHttpCodes().contains(httpResponse.getCode()))) {
-				ComplexContent response = parseOutput(((ContentPart) httpResponse.getContent()).getReadable(), getDefinition().getCharset());
+				ContentPart contentPart;
+				if (httpResponse.getContent() instanceof ContentPart) {
+					contentPart = (ContentPart) httpResponse.getContent();
+				}
+				else if (httpResponse.getContent() instanceof MultiPart) {
+					contentPart = (ContentPart) ((MultiPart) httpResponse.getContent()).getChild("part0");
+				}
+				else {
+					throw new IllegalStateException("Could not find content part for response");
+				}
+				ComplexContent response = parseOutput(contentPart.getReadable(), getDefinition().getCharset());
 				ComplexContent output = getDefinition().getServiceInterface().getOutputDefinition().newInstance();
 				if (definition.isBackwardsCompatible()) {
 					if (getDefinition().getOperation().getOperation().getOutput() != null && !getDefinition().getOperation().getOperation().getOutput().getParts().isEmpty()) {
