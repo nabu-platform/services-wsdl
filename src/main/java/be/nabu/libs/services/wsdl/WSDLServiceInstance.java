@@ -261,8 +261,15 @@ public class WSDLServiceInstance implements ServiceInstance {
 			}
 			else {
 				byte[] bytes = null;
+				ContentPart contentPart = null;
 				if (httpResponse.getContent() instanceof ContentPart) {
-					ReadableContainer<ByteBuffer> readable = ((ContentPart) httpResponse.getContent()).getReadable();
+					contentPart = (ContentPart) httpResponse.getContent();
+				}
+				else if (httpResponse.getContent() instanceof MultiPart) {
+					contentPart = (ContentPart) ((MultiPart) httpResponse.getContent()).getChild("part0");
+				}
+				if (contentPart != null) {
+					ReadableContainer<ByteBuffer> readable = contentPart.getReadable();
 					if (readable != null) {
 						try {
 							bytes = IOUtils.toBytes(readable);
